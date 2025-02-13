@@ -1,6 +1,9 @@
 const jwt = require("jsonwebtoken");
 
-// ✅ Middleware: Cek Token JWT
+/**
+ * ✅ Middleware: Cek Token JWT
+ * - Memastikan user mengirim token JWT yang valid
+ */
 const authenticateToken = (req, res, next) => {
   const token = req.header("Authorization");
 
@@ -17,7 +20,10 @@ const authenticateToken = (req, res, next) => {
   }
 };
 
-// ✅ Middleware: Cek Role (Hanya Admin)
+/**
+ * ✅ Middleware: Cek Role (Hanya Admin)
+ * - Hanya user dengan role tertentu yang bisa akses (contoh: "admin")
+ */
 const authorizeRole = (roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
@@ -27,4 +33,15 @@ const authorizeRole = (roles) => {
   };
 };
 
-module.exports = { authenticateToken, authorizeRole };
+/**
+ * ✅ Middleware: Cek Hak Akses Berdasarkan ID
+ * - User hanya bisa mengelola data dirinya sendiri
+ */
+const authorizeSelf = (req, res, next) => {
+  if (req.user.id !== parseInt(req.params.id)) {
+    return res.status(403).json({ message: "Akses ditolak! Anda hanya bisa mengelola akun sendiri." });
+  }
+  next();
+};
+
+module.exports = { authenticateToken, authorizeRole, authorizeSelf };

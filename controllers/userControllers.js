@@ -10,29 +10,14 @@ require("dotenv").config();
 const registerUser = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
-
-    // Cek validasi input
     const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    // Cek apakah email sudah digunakan
     const existingUser = await User.findOne({ where: { email } });
-    if (existingUser) {
-      return res.status(400).json({ message: "Email sudah terdaftar" });
-    }
+    if (existingUser) return res.status(400).json({ message: "Email sudah terdaftar" });
 
-    // Hash password sebelum disimpan
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Simpan user ke database
-    const newUser = await User.create({
-      name,
-      email,
-      password: hashedPassword,
-      role: role || "user", // Default role sebagai "user"
-    });
+    const newUser = await User.create({ name, email, password: hashedPassword, role: role || "user" });
 
     res.status(201).json({ message: "Registrasi berhasil", user: newUser });
   } catch (error) {
@@ -46,21 +31,14 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-
-    // Cari user berdasarkan email
     const user = await User.findOne({ where: { email } });
-    if (!user) return res.status(400).json({ message: "Email atau password salah" });
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(400).json({ message: "Email atau password salah" });
+    }
 
-    // Cek password
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: "Email atau password salah" });
-
-    // Generate token JWT
-    const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN }
-    );
+    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRES_IN,
+    });
 
     res.json({ message: "Login berhasil", token });
   } catch (error) {
@@ -69,11 +47,14 @@ const loginUser = async (req, res) => {
 };
 
 /**
- * ✅ Get All Users (Hanya Admin)
+ * ✅ Get All Users
  */
 const getAllUsers = async (req, res) => {
   try {
-    const users = await User.findAll();
+    let users = await User.findAll();
+    if (req.user.role !== "admin") {
+      users = users.map(({ name, email }) => ({ name, email }));
+    }
     res.json(users);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -81,18 +62,16 @@ const getAllUsers = async (req, res) => {
 };
 
 /**
- * ✅ Get User by ID (Admin bisa lihat semua user, user hanya bisa lihat dirinya sendiri)
+ * ✅ Get User by ID
  */
 const getUserById = async (req, res) => {
   try {
     const user = await User.findByPk(req.params.id);
     if (!user) return res.status(404).json({ message: "User tidak ditemukan" });
 
-    // Cek apakah user mencoba melihat akun orang lain (kecuali admin)
     if (req.user.role !== "admin" && req.user.id !== user.id) {
-      return res.status(403).json({ message: "Akses ditolak! Anda hanya bisa melihat akun sendiri." });
+      return res.json({ name: user.name, email: user.email });
     }
-
     res.json(user);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -100,23 +79,17 @@ const getUserById = async (req, res) => {
 };
 
 /**
- * ✅ Update User (User hanya bisa edit dirinya sendiri, admin bisa edit siapa saja)
+ * ✅ Update User
  */
 const updateUser = async (req, res) => {
   try {
     const user = await User.findByPk(req.params.id);
     if (!user) return res.status(404).json({ message: "User tidak ditemukan" });
-
-    // Cek apakah user mencoba mengedit akun orang lain (kecuali admin)
     if (req.user.role !== "admin" && req.user.id !== user.id) {
-      return res.status(403).json({ message: "Akses ditolak! Anda hanya bisa mengedit akun sendiri." });
+      return res.status(403).json({ message: "Akses ditolak!" });
     }
 
-    // Hash password jika ada yang baru
-    if (req.body.password) {
-      req.body.password = await bcrypt.hash(req.body.password, 10);
-    }
-
+    if (req.body.password) req.body.password = await bcrypt.hash(req.body.password, 10);
     await user.update(req.body);
     res.json({ message: "User berhasil diperbarui", user });
   } catch (error) {
@@ -125,12 +98,15 @@ const updateUser = async (req, res) => {
 };
 
 /**
- * ✅ Delete User (Hanya Admin)
+ * ✅ Delete User
  */
 const deleteUser = async (req, res) => {
   try {
     const user = await User.findByPk(req.params.id);
     if (!user) return res.status(404).json({ message: "User tidak ditemukan" });
+    if (req.user.role !== "admin" && req.user.id !== user.id) {
+      return res.status(403).json({ message: "Akses ditolak!" });
+    }
 
     await user.destroy();
     res.json({ message: "User berhasil dihapus" });
@@ -140,11 +116,4 @@ const deleteUser = async (req, res) => {
 };
 
 // 🔥 Export semua function
-module.exports = {
-  registerUser,
-  loginUser,
-  getAllUsers,
-  getUserById,
-  updateUser,
-  deleteUser,
-};
+module.exports = { registerUser, loginUser, getAllUsers, getUserById, updateUser, deleteUser };
