@@ -22,7 +22,7 @@ exports.getComments = async (req, res) => {
 // ✅ POST Buat Komentar Baru
 exports.createComment = async (req, res) => {
   try {
-    const { content, parent_id } = req.body; // Pastikan ini "content"
+    const { content, parent_id } = req.body;
     const userId = req.user.id;
     const postId = req.params.postId;
 
@@ -30,11 +30,19 @@ exports.createComment = async (req, res) => {
       return res.status(400).json({ message: "Komentar tidak boleh kosong" });
     }
 
-    const newComment = await Comment.create({ 
-      post_id: postId, 
-      user_id: userId, 
-      comment: content, // ✅ Perbaiki di sini
-      parent_id: parent_id || null,
+    // Jika ada parent_id, pastikan parent_id valid
+    if (parent_id) {
+      const parentComment = await Comment.findByPk(parent_id);
+      if (!parentComment) {
+        return res.status(400).json({ message: "Komentar induk tidak ditemukan" });
+      }
+    }
+
+    const newComment = await Comment.create({
+      post_id: postId,
+      user_id: userId,
+      comment: content,
+      parent_id: parent_id || null, // Kalau null, berarti ini komentar utama
     });
 
     res.status(201).json({ message: "Komentar berhasil dibuat", newComment });
@@ -42,6 +50,7 @@ exports.createComment = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 
 // ✅ PUT Edit Komentar (Hanya pemilik yang bisa edit)

@@ -2,7 +2,7 @@ const express = require("express");
 const { body } = require("express-validator");
 const router = express.Router();
 const userController = require("../controllers/userControllers");
-const { authenticateToken, authorizeRole, authorizeSelf } = require("../middleware/auth");
+const { authenticateToken, authorizeRole } = require("../middleware/auth");
 
 // ✅ Register User
 router.post(
@@ -31,13 +31,10 @@ router.get("/profile", authenticateToken, userController.getUserProfile);
 // ✅ Get All Users (Hanya Admin)
 router.get("/users", authenticateToken, authorizeRole("admin"), userController.getAllUsers);
 
-// ✅ Get User by ID (Admin bisa lihat siapa aja, user hanya bisa lihat dirinya sendiri)
-router.get("/users/:id", authenticateToken, authorizeSelf, userController.getUserById);
+// ✅ Update User (User hanya bisa update dirinya sendiri, admin bisa update siapa aja)
+router.put("/profile", authenticateToken, userController.updateUser);
 
-// ✅ Update User (Admin bisa update siapa aja, user hanya bisa update dirinya sendiri)
-router.put("/users/:id", authenticateToken, authorizeSelf, userController.updateUser);
-
-// ✅ Delete User (User bisa hapus akunnya sendiri, admin bisa hapus siapa saja)
-router.delete("/users/:id", authenticateToken, authorizeSelf, userController.deleteUser);
+// ✅ Delete User (User hanya bisa hapus akun sendiri, admin bisa hapus siapa aja)
+router.delete("/users", authenticateToken, userController.deleteUser);
 
 module.exports = router;
