@@ -10,8 +10,14 @@ User.init(
     email: { type: DataTypes.STRING, allowNull: false, unique: true },
     password: { type: DataTypes.STRING, allowNull: false },
     role: { type: DataTypes.ENUM("admin", "user"), defaultValue: "user" },
+    point: { type: DataTypes.INTEGER, defaultValue: 0 }, // Tambahin kolom point
   },
-  { sequelize, modelName: "User", tableName: "users", timestamps: false }
+  {
+    sequelize,
+    modelName: "User",
+    tableName: "users",
+    timestamps: false,
+  }
 );
 
 module.exports = User;

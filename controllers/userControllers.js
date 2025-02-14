@@ -47,14 +47,18 @@ const loginUser = async (req, res) => {
 };
 
 /**
- * ✅ Get All Users
+ * ✅ Get All Users (Admin Only)
  */
 const getAllUsers = async (req, res) => {
   try {
-    let users = await User.findAll();
     if (req.user.role !== "admin") {
-      users = users.map(({ name, email }) => ({ name, email }));
+      return res.status(403).json({ message: "Akses ditolak!" });
     }
+
+    const users = await User.findAll({
+      attributes: ["id", "name", "email", "role", "point"], // Tambahin point
+    });
+
     res.json(users);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -62,16 +66,37 @@ const getAllUsers = async (req, res) => {
 };
 
 /**
- * ✅ Get User by ID
+ * ✅ Get User Profile (Yang Login)
+ */
+const getUserProfile = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.user.id, {
+      attributes: ["id", "name", "email", "role", "point"], // Tambahin point
+    });
+
+    if (!user) return res.status(404).json({ message: "User tidak ditemukan" });
+
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/**
+ * ✅ Get User by ID (Admin Only)
  */
 const getUserById = async (req, res) => {
   try {
-    const user = await User.findByPk(req.params.id);
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Akses ditolak!" });
+    }
+
+    const user = await User.findByPk(req.params.id, {
+      attributes: ["id", "name", "email", "role", "point"], // Tambahin point
+    });
+
     if (!user) return res.status(404).json({ message: "User tidak ditemukan" });
 
-    if (req.user.role !== "admin" && req.user.id !== user.id) {
-      return res.json({ name: user.name, email: user.email });
-    }
     res.json(user);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -83,13 +108,13 @@ const getUserById = async (req, res) => {
  */
 const updateUser = async (req, res) => {
   try {
-    const user = await User.findByPk(req.params.id);
+    const user = await User.findByPk(req.user.id);
     if (!user) return res.status(404).json({ message: "User tidak ditemukan" });
-    if (req.user.role !== "admin" && req.user.id !== user.id) {
-      return res.status(403).json({ message: "Akses ditolak!" });
+
+    if (req.body.password) {
+      req.body.password = await bcrypt.hash(req.body.password, 10);
     }
 
-    if (req.body.password) req.body.password = await bcrypt.hash(req.body.password, 10);
     await user.update(req.body);
     res.json({ message: "User berhasil diperbarui", user });
   } catch (error) {
@@ -98,15 +123,12 @@ const updateUser = async (req, res) => {
 };
 
 /**
- * ✅ Delete User
+ * ✅ Delete User (Hanya bisa hapus diri sendiri / Admin)
  */
 const deleteUser = async (req, res) => {
   try {
-    const user = await User.findByPk(req.params.id);
+    const user = await User.findByPk(req.user.id);
     if (!user) return res.status(404).json({ message: "User tidak ditemukan" });
-    if (req.user.role !== "admin" && req.user.id !== user.id) {
-      return res.status(403).json({ message: "Akses ditolak!" });
-    }
 
     await user.destroy();
     res.json({ message: "User berhasil dihapus" });
@@ -116,4 +138,4 @@ const deleteUser = async (req, res) => {
 };
 
 // 🔥 Export semua function
-module.exports = { registerUser, loginUser, getAllUsers, getUserById, updateUser, deleteUser };
+module.exports = { registerUser, loginUser, getAllUsers, getUserProfile, getUserById, updateUser, deleteUser };

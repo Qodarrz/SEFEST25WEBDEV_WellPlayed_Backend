@@ -25,16 +25,19 @@ router.post(
   userController.loginUser
 );
 
-// ✅ Get All Users (Hanya Admin)
-router.get("/users", authenticateToken, userController.getAllUsers);
+// ✅ Get User Profile (User yang login)
+router.get("/profile", authenticateToken, userController.getUserProfile);
 
-// ✅ Get User by ID (User hanya bisa lihat dirinya sendiri, admin bisa lihat siapa saja)
+// ✅ Get All Users (Hanya Admin)
+router.get("/users", authenticateToken, authorizeRole("admin"), userController.getAllUsers);
+
+// ✅ Get User by ID (Admin bisa lihat siapa aja, user hanya bisa lihat dirinya sendiri)
 router.get("/users/:id", authenticateToken, authorizeSelf, userController.getUserById);
 
-// ✅ Update User (User hanya bisa update dirinya sendiri, admin bisa update siapa saja)  
+// ✅ Update User (Admin bisa update siapa aja, user hanya bisa update dirinya sendiri)
 router.put("/users/:id", authenticateToken, authorizeSelf, userController.updateUser);
 
-// ✅ Delete User (Hanya Admin)
-router.delete("/users/:id", authenticateToken, userController.deleteUser);
+// ✅ Delete User (User bisa hapus akunnya sendiri, admin bisa hapus siapa saja)
+router.delete("/users/:id", authenticateToken, authorizeSelf, userController.deleteUser);
 
 module.exports = router;
