@@ -1,15 +1,12 @@
+// routes/users.js
 const express = require("express");
 const { body } = require("express-validator");
 const router = express.Router();
 const userController = require("../controllers/userControllers");
 const { authenticateToken, authorizeRole } = require("../middleware/auth");
+const upload = require("../middleware/multer"); // Import multer here
 
 // ✅ Register User
-// User baru bisa daftar dengan name, email, dan password
-// Validasi:
-// - Name tidak boleh kosong
-// - Email harus format valid
-// - Password minimal 6 karakter
 router.post(
   "/register",
   [
@@ -21,10 +18,6 @@ router.post(
 );
 
 // ✅ Login User
-// User bisa login pakai email & password
-// Validasi:
-// - Email harus format valid
-// - Password tidak boleh kosong
 router.post(
   "/login",
   [
@@ -35,21 +28,21 @@ router.post(
 );
 
 // ✅ Get User Profile
-// Hanya user yang login bisa akses profilnya sendiri
 router.get("/profile", authenticateToken, userController.getUserProfile);
 
 // ✅ Get All Users (Hanya Admin)
-// Admin bisa melihat daftar semua user
 router.get("/users", authenticateToken, authorizeRole("admin"), userController.getAllUsers);
 
 // ✅ Update User Profile
-// User hanya bisa mengupdate profil dirinya sendiri
-// Admin bisa update siapa aja
-router.put("/profile", authenticateToken, userController.updateUser);
+router.put(
+  "/profile",
+  authenticateToken, // Middleware to check token
+  upload.fields([{ name: "profile_picture", maxCount: 1 }])
+, // Multer to handle file upload
+  userController.updateUser // Your controller function to update user data
+);
 
 // ✅ Delete User
-// - User bisa menghapus akunnya sendiri
-// - Admin bisa menghapus user lain
 router.delete("/users", authenticateToken, userController.deleteUser);
 
 module.exports = router;

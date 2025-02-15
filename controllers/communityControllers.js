@@ -57,6 +57,7 @@ exports.getAllPosts = async (req, res) => {
 };
 
 // ✅ Get satu post berdasarkan ID + komentar & reply-nya + Jumlah Like
+// ✅ Get satu post berdasarkan ID + komentar & reply-nya + Jumlah Like
 exports.getPostById = async (req, res) => {
   try {
     const { postId } = req.params;
@@ -66,18 +67,18 @@ exports.getPostById = async (req, res) => {
         {
           model: User,
           as: "author",
-          attributes: ["id", "name", "email", "profile_picture"], // Menambahkan profile_picture pada author
+          attributes: ["id", "name", "email", "profile_picture"],
         },
         {
           model: Comment,
           as: "comments",
-          where: { parent_id: null }, // 🔥 Hanya komentar utama
+          where: { parent_id: null },
           required: false,
           include: [
             {
               model: User,
               as: "commenter",
-              attributes: ["id", "name", "profile_picture"], // Menambahkan profile_picture pada komentar
+              attributes: ["id", "name", "profile_picture"],
             },
             {
               model: Comment,
@@ -86,7 +87,7 @@ exports.getPostById = async (req, res) => {
                 {
                   model: User,
                   as: "commenter",
-                  attributes: ["id", "name", "profile_picture"], // Menambahkan profile_picture pada balasan
+                  attributes: ["id", "name", "profile_picture"],
                 },
               ],
             },
@@ -94,24 +95,18 @@ exports.getPostById = async (req, res) => {
         },
         {
           model: CommunityLike,
-          as: "community_likes", // Pastikan alias yang benar
-          attributes: [],
+          as: "community_likes",
+          attributes: [[fn("COUNT", col("community_likes.id")), "likeCount"]],
         },
       ],
-      attributes: {
-        include: [
-          [
-            fn("COUNT", col("community_likes.id")),
-            "likeCount",
-          ],
-        ],
-      },
-      group: ["Community.id"], // Kelompokkan berdasarkan post ID agar perhitungan like per post benar
+      group: [
+        "Community.id", 
+        "comments.id", 
+        "community_likes.post_id", // Gunakan post_id, bukan community_id
+      ], 
     });
 
-    if (!post) {
-      return res.status(404).json({ message: "Post tidak ditemukan" });
-    }
+    if (!post) return res.status(404).json({ message: "Post tidak ditemukan" });
 
     res.status(200).json(post);
   } catch (error) {
@@ -119,6 +114,7 @@ exports.getPostById = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 
 // ✅ Buat Post Baru

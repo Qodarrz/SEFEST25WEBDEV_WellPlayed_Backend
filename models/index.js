@@ -4,6 +4,8 @@ const Community = require("./Community");
 const CommunityLike = require("./CommunityLike"); // Ganti nama variabel
 const Comment = require("./Comment");
 const Emission = require("./Emisi"); // ✅ Import model Emission
+const Achievement = require("./Achievement"); // Pastikan pathnya benar
+
 
 // 🔗 Relasi User ke Community (Post)
 User.hasMany(Community, { foreignKey: "user_id", as: "posts" });
@@ -32,5 +34,8 @@ CommunityLike.belongsTo(User, { foreignKey: "user_id", as: "user" });
 // Relasi Community ke CommunityLike
 Community.hasMany(CommunityLike, { foreignKey: "post_id", as: "community_likes" });
 CommunityLike.belongsTo(Community, { foreignKey: "post_id", as: "community" });
+
+User.hasMany(Achievement, { foreignKey: "user_id", as: "achievements" });
+Achievement.belongsTo(User, { foreignKey: "user_id", as: "user" });
 
 module.exports = { sequelize, User, Community, Comment, Emission, CommunityLike };
