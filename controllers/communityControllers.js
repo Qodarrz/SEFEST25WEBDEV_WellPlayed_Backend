@@ -134,9 +134,11 @@ exports.updatePost = async (req, res) => {
 };
 
 // ✅ Hapus Post (Hanya pemilik atau admin yang bisa hapus)
+// ✅ Hapus Post (Hanya pemilik atau admin yang bisa hapus)
 exports.deletePost = async (req, res) => {
   try {
     const post = await Community.findByPk(req.params.id, {
+
       include: { model: Comment, as: "comments" },
     });
 
@@ -146,12 +148,15 @@ exports.deletePost = async (req, res) => {
       return res.status(403).json({ message: "Akses ditolak! Anda hanya bisa hapus post sendiri." });
     }
 
-    // 🔥 Hapus semua komentar dalam post ini sebelum hapus postnya
-    await Comment.destroy({ where: { community_id: post.id } });
+    // 🔥 Hapus semua komentar berdasarkan post_id sebelum hapus post
+    await Comment.destroy({ where: { post_id: post.id } });
 
+    // 🔥 Hapus post-nya setelah semua komentarnya terhapus
     await post.destroy();
+
     res.json({ message: "Post berhasil dihapus" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+

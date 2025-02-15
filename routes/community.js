@@ -18,10 +18,10 @@ router.get("/community/:postId", CommunityController.getPostById);
 router.post("/community", CommunityController.createPost);
 
 // 📝 PUT update post (hanya pemilik bisa edit)
-router.put("/community/:postId", CommunityController.updatePost);
+router.put("/community/:id", CommunityController.updatePost);
 
 // ❌ DELETE hapus post (hanya pemilik atau admin)
-router.delete("/community/:postId", CommunityController.deletePost);
+router.delete("/community/:id", CommunityController.deletePost);
 
 // ===================== COMMENT ROUTES =====================
 // 📝 GET semua komentar di post tertentu
