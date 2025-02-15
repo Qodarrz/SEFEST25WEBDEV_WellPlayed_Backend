@@ -1,6 +1,7 @@
 const { Comment, User, Community } = require("../models");
 
 // ✅ GET Semua Komentar di Post tertentu (termasuk reply)
+// ✅ GET Semua Komentar di Post tertentu (termasuk reply)
 exports.getComments = async (req, res) => {
   try {
     const comments = await Comment.findAll({
@@ -9,7 +10,7 @@ exports.getComments = async (req, res) => {
         {
           model: User,
           as: "commenter",
-          attributes: ["id", "name", "email"],
+          attributes: ["id", "name", "email", "profile_picture"], // Menambahkan profile_picture
         },
         {
           model: Comment,
@@ -18,7 +19,7 @@ exports.getComments = async (req, res) => {
             {
               model: User,
               as: "commenter",
-              attributes: ["id", "name"],
+              attributes: ["id", "name", "profile_picture"], // Menambahkan profile_picture untuk replies
             },
           ],
         },
@@ -31,6 +32,7 @@ exports.getComments = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 // ✅ POST Buat Komentar Baru
 exports.createComment = async (req, res) => {

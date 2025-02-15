@@ -1,7 +1,7 @@
-const { Op } = require("sequelize");
-const { Community, User, Comment, CommunityLike, sequelize } = require("../models");
+const { Op, fn, col } = require("sequelize");
+const { Community, User, Comment, CommunityLike } = require("../models");
 
-// ✅ Ambil Semua Post + Komentar & Reply-nya + Jumlah Like
+// ✅ GET Semua Post dengan Komentar, Balasan, dan Like
 exports.getAllPosts = async (req, res) => {
   try {
     const communities = await Community.findAll({
@@ -9,18 +9,18 @@ exports.getAllPosts = async (req, res) => {
         {
           model: User,
           as: "author",
-          attributes: ["id", "name", "email"],
+          attributes: ["id", "name", "email", "profile_picture"], // Menambahkan profile_picture
         },
         {
           model: Comment,
           as: "comments",
-          where: { parent_id: null }, // 🔥 Ambil hanya komentar utama (bukan reply)
-          required: false, // 🔥 Biar kalau ga ada komen tetap jalan
+          where: { parent_id: null }, // Ambil hanya komentar utama
+          required: false, // Biar kalau ga ada komen tetap jalan
           include: [
             {
               model: User,
               as: "commenter",
-              attributes: ["id", "name"],
+              attributes: ["id", "name", "profile_picture"], // Menambahkan profile_picture pada komentar
             },
             {
               model: Comment,
@@ -29,29 +29,24 @@ exports.getAllPosts = async (req, res) => {
                 {
                   model: User,
                   as: "commenter",
-                  attributes: ["id", "name"],
+                  attributes: ["id", "name", "profile_picture"], // Menambahkan profile_picture pada balasan
                 },
               ],
             },
           ],
         },
         {
-          model: CommunityLike,
-          as: "community_likes", // Pastikan alias yang benar
-          attributes: [], // Tidak perlu menarik atribut dari CommunityLike, hanya ingin menghitung jumlah like
+          model: CommunityLike, // Menghitung total like
+          as: "community_likes",
+          attributes: [[fn("COUNT", col("community_likes.id")), "likeCount"]],
         },
       ],
-      attributes: {
-        include: [
-          [
-            // Menggunakan Sequelize.fn untuk menghitung jumlah like
-            sequelize.fn("COUNT", sequelize.col("community_likes.id")),
-            "likeCount", // alias untuk jumlah like
-          ],
-        ],
-      },
-      group: ["Community.id"], // Kelompokkan berdasarkan post ID agar perhitungan like per post benar
-      order: [["createdAt", "DESC"]], // 🔥 Order dari terbaru ke terlama
+      group: [
+        "Community.id", 
+        "comments.id", 
+        "community_likes.post_id", // Gunakan post_id, bukan community_id
+      ], 
+      order: [["createdAt", "DESC"]], // Urutkan berdasarkan post terbaru
     });
 
     res.status(200).json(communities);
@@ -71,7 +66,7 @@ exports.getPostById = async (req, res) => {
         {
           model: User,
           as: "author",
-          attributes: ["id", "name", "email"],
+          attributes: ["id", "name", "email", "profile_picture"], // Menambahkan profile_picture pada author
         },
         {
           model: Comment,
@@ -82,7 +77,7 @@ exports.getPostById = async (req, res) => {
             {
               model: User,
               as: "commenter",
-              attributes: ["id", "name"],
+              attributes: ["id", "name", "profile_picture"], // Menambahkan profile_picture pada komentar
             },
             {
               model: Comment,
@@ -91,7 +86,7 @@ exports.getPostById = async (req, res) => {
                 {
                   model: User,
                   as: "commenter",
-                  attributes: ["id", "name"],
+                  attributes: ["id", "name", "profile_picture"], // Menambahkan profile_picture pada balasan
                 },
               ],
             },
@@ -106,7 +101,7 @@ exports.getPostById = async (req, res) => {
       attributes: {
         include: [
           [
-            sequelize.fn("COUNT", sequelize.col("community_likes.id")),
+            fn("COUNT", col("community_likes.id")),
             "likeCount",
           ],
         ],
@@ -124,6 +119,7 @@ exports.getPostById = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 // ✅ Buat Post Baru
 exports.createPost = async (req, res) => {
