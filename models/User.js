@@ -10,7 +10,8 @@ User.init(
     email: { type: DataTypes.STRING, allowNull: false, unique: true },
     password: { type: DataTypes.STRING, allowNull: false },
     role: { type: DataTypes.ENUM("admin", "user"), defaultValue: "user" },
-    point: { type: DataTypes.INTEGER, defaultValue: 0 }, // Tambahin kolom point
+    point: { type: DataTypes.INTEGER, defaultValue: 0 }, // Kolom point
+    profile_picture: { type: DataTypes.STRING, allowNull: true }, // Tambahin kolom foto profil
   },
   {
     sequelize,

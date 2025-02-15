@@ -3,7 +3,9 @@ const { getLeaderboard } = require("../controllers/leaderboardControllers");
 
 const router = express.Router();
 
-// 🔹 Route untuk ambil leaderboard (10 user dengan point terbanyak)
+// 🔹 GET Leaderboard
+// Ambil daftar 10 user dengan poin terbanyak
+// Bisa diakses tanpa login (umumnya leaderboard itu publik)
 router.get("/leaderboard", getLeaderboard);
 
 module.exports = router;

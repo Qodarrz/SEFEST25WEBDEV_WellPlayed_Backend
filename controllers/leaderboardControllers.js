@@ -3,7 +3,7 @@ const User = require("../models/User");
 const getLeaderboard = async (req, res) => {
   try {
     const leaderboard = await User.findAll({
-      attributes: ["id", "name", "point"],
+      attributes: ["id", "name", "point", "profile_picture"], // Tambahin profile_picture
       order: [["point", "DESC"]], // Urutin dari point terbesar ke terkecil
       limit: 10, // Ambil 10 user teratas
     });

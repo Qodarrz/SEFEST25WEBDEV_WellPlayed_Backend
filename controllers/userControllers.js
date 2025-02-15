@@ -9,7 +9,7 @@ require("dotenv").config();
  */
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, profile_picture } = req.body; // Tambahin profile_picture
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
@@ -17,7 +17,7 @@ const registerUser = async (req, res) => {
     if (existingUser) return res.status(400).json({ message: "Email sudah terdaftar" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = await User.create({ name, email, password: hashedPassword, role: role || "user" });
+    const newUser = await User.create({ name, email, password: hashedPassword, role: role || "user", profile_picture });
 
     res.status(201).json({ message: "Registrasi berhasil", user: newUser });
   } catch (error) {
@@ -56,7 +56,7 @@ const getAllUsers = async (req, res) => {
     }
 
     const users = await User.findAll({
-      attributes: ["id", "name", "email", "role", "point"], // Tambahin point
+      attributes: ["id", "name", "email", "role", "point", "profile_picture"], // Tambahin profile_picture
     });
 
     res.json(users);
@@ -71,7 +71,7 @@ const getAllUsers = async (req, res) => {
 const getUserProfile = async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id, {
-      attributes: ["id", "name", "email", "role", "point"], // Tambahin point
+      attributes: ["id", "name", "email", "role", "point", "profile_picture"], // Tambahin profile_picture
     });
 
     if (!user) return res.status(404).json({ message: "User tidak ditemukan" });
@@ -92,7 +92,7 @@ const getUserById = async (req, res) => {
     }
 
     const user = await User.findByPk(req.params.id, {
-      attributes: ["id", "name", "email", "role", "point"], // Tambahin point
+      attributes: ["id", "name", "email", "role", "point", "profile_picture"], // Tambahin profile_picture
     });
 
     if (!user) return res.status(404).json({ message: "User tidak ditemukan" });
@@ -104,7 +104,7 @@ const getUserById = async (req, res) => {
 };
 
 /**
- * ✅ Update User
+ * ✅ Update User (Bisa Update Foto Profil)
  */
 const updateUser = async (req, res) => {
   try {
