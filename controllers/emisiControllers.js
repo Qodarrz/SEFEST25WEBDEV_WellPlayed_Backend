@@ -55,16 +55,27 @@ const saveEmission = async (req, res) => {
 // 🔹 Ambil Data Emisi User Tertentu (User hanya bisa lihat datanya sendiri)
 const getUserEmissions = async (req, res) => {
   try {
-    const emissions = await Emission.findAll({
-      where: { user_id: req.user.id },
-      order: [["created_at", "DESC"]],
-    });
+    let emissions;
+
+    if (req.user.role === "admin") {
+      // 🔥 Admin bisa lihat semua data
+      emissions = await Emission.findAll({
+        order: [["created_at", "DESC"]],
+      });
+    } else {
+      // 🔥 User biasa cuma bisa lihat data sendiri
+      emissions = await Emission.findAll({
+        where: { user_id: req.user.id },
+        order: [["created_at", "DESC"]],
+      });
+    }
 
     res.status(200).json(emissions);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 // 🔹 Hapus Data Emisi (Admin Only)
 const deleteEmission = async (req, res) => {

@@ -4,7 +4,6 @@ const cors = require("cors");
 const db = require("./config/database");
 const userRoutes = require("./routes/users"); 
 const communityRoutes = require("./routes/community");
-const commentRoutes = require("./routes/comment");
 const emisiRoutes = require("./routes/emisi");
 const leaderboardRoutes = require("./routes/leaderboard");
 
@@ -17,7 +16,6 @@ app.use(cors()); // Enable CORS buat frontend
 app.use(express.json()); // Middleware buat parsing JSON
 app.use("/api", userRoutes);
 app.use("/api", communityRoutes);
-app.use("/api", commentRoutes);
 app.use("/api", emisiRoutes);
 app.use("/api", leaderboardRoutes);
  // Semua API diawali `/api`
