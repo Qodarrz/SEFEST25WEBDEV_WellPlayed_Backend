@@ -1,6 +1,7 @@
 const sequelize = require("../config/database");
 const User = require("./User");
 const Community = require("./Community");
+const CommunityLike = require("./CommunityLike"); // Ganti nama variabel
 const Comment = require("./Comment");
 const Emission = require("./Emisi"); // ✅ Import model Emission
 
@@ -24,4 +25,12 @@ Comment.belongsTo(Comment, { foreignKey: "parent_id", as: "parent" });
 User.hasMany(Emission, { foreignKey: "user_id", onDelete: "CASCADE", as: "emissions" });
 Emission.belongsTo(User, { foreignKey: "user_id", as: "auth" });
 
-module.exports = { sequelize, User, Community, Comment, Emission };
+// Relasi User ke CommunityLike
+User.hasMany(CommunityLike, { foreignKey: "user_id", as: "community_likes" });
+CommunityLike.belongsTo(User, { foreignKey: "user_id", as: "user" });
+
+// Relasi Community ke CommunityLike
+Community.hasMany(CommunityLike, { foreignKey: "post_id", as: "community_likes" });
+CommunityLike.belongsTo(Community, { foreignKey: "post_id", as: "community" });
+
+module.exports = { sequelize, User, Community, Comment, Emission, CommunityLike };

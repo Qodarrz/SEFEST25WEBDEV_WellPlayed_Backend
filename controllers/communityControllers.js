@@ -1,7 +1,7 @@
 const { Op } = require("sequelize");
-const { Community, User, Comment } = require("../models");
+const { Community, User, Comment, CommunityLike, sequelize } = require("../models");
 
-// ✅ Ambil Semua Post + Komentar & Reply-nya
+// ✅ Ambil Semua Post + Komentar & Reply-nya + Jumlah Like
 exports.getAllPosts = async (req, res) => {
   try {
     const communities = await Community.findAll({
@@ -35,7 +35,22 @@ exports.getAllPosts = async (req, res) => {
             },
           ],
         },
+        {
+          model: CommunityLike,
+          as: "community_likes", // Pastikan alias yang benar
+          attributes: [], // Tidak perlu menarik atribut dari CommunityLike, hanya ingin menghitung jumlah like
+        },
       ],
+      attributes: {
+        include: [
+          [
+            // Menggunakan Sequelize.fn untuk menghitung jumlah like
+            sequelize.fn("COUNT", sequelize.col("community_likes.id")),
+            "likeCount", // alias untuk jumlah like
+          ],
+        ],
+      },
+      group: ["Community.id"], // Kelompokkan berdasarkan post ID agar perhitungan like per post benar
       order: [["createdAt", "DESC"]], // 🔥 Order dari terbaru ke terlama
     });
 
@@ -46,7 +61,7 @@ exports.getAllPosts = async (req, res) => {
   }
 };
 
-// ✅ Get satu post berdasarkan ID + komentar & reply-nya
+// ✅ Get satu post berdasarkan ID + komentar & reply-nya + Jumlah Like
 exports.getPostById = async (req, res) => {
   try {
     const { postId } = req.params;
@@ -82,7 +97,21 @@ exports.getPostById = async (req, res) => {
             },
           ],
         },
+        {
+          model: CommunityLike,
+          as: "community_likes", // Pastikan alias yang benar
+          attributes: [],
+        },
       ],
+      attributes: {
+        include: [
+          [
+            sequelize.fn("COUNT", sequelize.col("community_likes.id")),
+            "likeCount",
+          ],
+        ],
+      },
+      group: ["Community.id"], // Kelompokkan berdasarkan post ID agar perhitungan like per post benar
     });
 
     if (!post) {
@@ -95,7 +124,6 @@ exports.getPostById = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
 
 // ✅ Buat Post Baru
 exports.createPost = async (req, res) => {
@@ -134,11 +162,9 @@ exports.updatePost = async (req, res) => {
 };
 
 // ✅ Hapus Post (Hanya pemilik atau admin yang bisa hapus)
-// ✅ Hapus Post (Hanya pemilik atau admin yang bisa hapus)
 exports.deletePost = async (req, res) => {
   try {
     const post = await Community.findByPk(req.params.id, {
-
       include: { model: Comment, as: "comments" },
     });
 
@@ -159,4 +185,3 @@ exports.deletePost = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-

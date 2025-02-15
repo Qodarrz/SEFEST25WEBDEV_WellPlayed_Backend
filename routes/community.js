@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const CommunityController = require("../controllers/communityControllers");
 const CommentController = require("../controllers/commentControllers");
+const CommunityLikeController = require("../controllers/communitylikesControllers"); // Import controller
 const { authenticateToken } = require("../middleware/auth"); // Middleware buat cek user login
 
 // ✅ Semua route di bawah ini butuh login dulu pakai `authenticateToken`
@@ -38,7 +39,6 @@ router.delete("/community/:postId/comments/:commentId", CommentController.delete
 
 // ===================== REPLY ROUTES (CRUD) =====================
 
-
 // 🔥 POST reply ke komentar tertentu
 router.post("/community/:postId/comments/:commentId/reply", CommentController.replyToComment);
 
@@ -47,5 +47,16 @@ router.put("/community/:postId/comments/:commentId/reply/:replyId", CommentContr
 
 // ❌ DELETE hapus reply (hanya pemilik atau admin)
 router.delete("/community/:postId/comments/:commentId/reply/:replyId", CommentController.deleteComment);
+
+// ===================== COMMUNITY LIKE ROUTES =====================
+// 📝 GET lihat semua like yang diterima oleh komunitas (post)
+router.get("/community/:postId/like", CommunityLikeController.getPostLikes);
+
+
+// 📝 POST like ke komunitas (suka)
+router.post("/community/:postId/like", CommunityLikeController.addCommunityLike);
+
+// 📝 DELETE like dari komunitas
+router.delete("/community/:postId/like/:likeId", CommunityLikeController.removeCommunityLike);
 
 module.exports = router;
