@@ -8,6 +8,7 @@ const communityRoutes = require("./routes/community");
 const emisiRoutes = require("./routes/emisi");
 const leaderboardRoutes = require("./routes/leaderboard");
 
+
 const app = express();
 
 app.use(cors()); // Enable CORS buat frontend

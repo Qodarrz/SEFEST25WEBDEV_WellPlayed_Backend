@@ -9,18 +9,18 @@ exports.getAllPosts = async (req, res) => {
         {
           model: User,
           as: "author",
-          attributes: ["id", "name", "email", "profile_picture"], // Menambahkan profile_picture
+          attributes: ["id", "name", "email", "profile_picture"],
         },
         {
           model: Comment,
           as: "comments",
-          where: { parent_id: null }, // Ambil hanya komentar utama
-          required: false, // Biar kalau ga ada komen tetap jalan
+          where: { parent_id: null },
+          required: false,
           include: [
             {
               model: User,
               as: "commenter",
-              attributes: ["id", "name", "profile_picture"], // Menambahkan profile_picture pada komentar
+              attributes: ["id", "name", "profile_picture"],
             },
             {
               model: Comment,
@@ -29,24 +29,39 @@ exports.getAllPosts = async (req, res) => {
                 {
                   model: User,
                   as: "commenter",
-                  attributes: ["id", "name", "profile_picture"], // Menambahkan profile_picture pada balasan
+                  attributes: ["id", "name", "profile_picture"],
                 },
               ],
             },
           ],
         },
         {
-          model: CommunityLike, // Menghitung total like
+          model: CommunityLike,
           as: "community_likes",
-          attributes: [[fn("COUNT", col("community_likes.id")), "likeCount"]],
+          attributes: [
+            "id",
+            [fn("COUNT", col("community_likes.id")), "likeCount"], // Hitung jumlah like
+          ],
+          include: [
+            {
+              model: User,
+              as: "user", // Gunakan alias yang sesuai dengan relasi di model
+              attributes: ["id", "name", "profile_picture"],
+            },
+          ],
         },
       ],
       group: [
-        "Community.id", 
-        "comments.id", 
-        "community_likes.post_id", // Gunakan post_id, bukan community_id
-      ], 
-      order: [["createdAt", "DESC"]], // Urutkan berdasarkan post terbaru
+        "Community.id",
+        "author.id",
+        "comments.id",
+        "comments.commenter.id",
+        "comments.replies.id",
+        "comments.replies.commenter.id",
+        "community_likes.id",
+        "community_likes.user.id",
+      ],
+      order: [["createdAt", "DESC"]],
     });
 
     res.status(200).json(communities);
@@ -55,6 +70,7 @@ exports.getAllPosts = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 // ✅ Get satu post berdasarkan ID + komentar & reply-nya + Jumlah Like
 // ✅ Get satu post berdasarkan ID + komentar & reply-nya + Jumlah Like

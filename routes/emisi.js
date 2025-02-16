@@ -1,22 +1,20 @@
 const express = require("express");
 const router = express.Router();
 const EmissionController = require("../controllers/emisiControllers");
-const { authenticateToken, authorizeRole } = require("../middleware/auth"); // Middleware buat cek user & role
+const MissionController = require("../controllers/missionControllers");
+const { authenticateToken, authorizeRole } = require("../middleware/auth");
 
-// 🔹 USER bisa pakai kalkulator emisi & lihat riwayatnya sendiri
+// 🔹 Middleware: Semua route butuh autentikasi
+router.use(authenticateToken);
 
-// 📝 POST data ke kalkulator emisi
-// User yang login bisa input data ke kalkulator untuk hitung emisi
-router.post("/kalkulator", authenticateToken, EmissionController.saveEmission);
+// 🔥 USER Routes (Input & Lihat Riwayat Emisi)
+router.post("/kalkulator", EmissionController.saveEmission);
+router.get("/kalkulator/riwayat", EmissionController.getUserEmissions);
 
-// 📝 GET riwayat emisi user sendiri
-// Hanya user yang login bisa lihat riwayat emisinya
-router.get("/riwayat", authenticateToken, EmissionController.getUserEmissions);
+// 🔥 ADMIN Routes (Hapus Emisi)
+router.delete("/kalkulator/:id", authorizeRole("admin"), EmissionController.deleteEmission);
 
-// 🔹 ADMIN bisa hapus data emisi berdasarkan ID
-
-// ❌ DELETE data emisi berdasarkan `id` (hanya admin)
-// Hanya admin yang punya akses buat hapus data emisi tertentu
-router.delete("/kalkulator/:id", authenticateToken, authorizeRole("admin"), EmissionController.deleteEmission);
+// 🔥 Mission Routes
+router.get("/missions", MissionController.getMissions);  // ✅ Pakai DELETE
 
 module.exports = router;
