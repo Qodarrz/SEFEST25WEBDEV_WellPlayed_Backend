@@ -29,6 +29,16 @@ const UserMission = sequelize.define(
       },
       onDelete: "CASCADE",
     },
+    date_taken: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
+    status: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: "pending", // pending, completed, dll.
+    },
     completed_at: {
       type: DataTypes.DATE,
       allowNull: true,
@@ -40,6 +50,5 @@ const UserMission = sequelize.define(
     timestamps: false,
   }
 );
-
 
 module.exports = UserMission;

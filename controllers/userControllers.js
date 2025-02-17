@@ -13,10 +13,12 @@ const registerUser = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+    if (!errors.isEmpty())
+      return res.status(400).json({ errors: errors.array() });
 
     const existingUser = await User.findOne({ where: { email } });
-    if (existingUser) return res.status(400).json({ message: "Email sudah terdaftar" });
+    if (existingUser)
+      return res.status(400).json({ message: "Email sudah terdaftar" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -26,6 +28,7 @@ const registerUser = async (req, res) => {
       password: hashedPassword,
       role: role && role === "admin" ? "admin" : "user",
       profile_picture: "/image/default.png",
+      // created_at akan otomatis terisi oleh defaultValue (DataTypes.NOW)
     });
 
     res.status(201).json({ message: "Registrasi berhasil", user: newUser });
@@ -99,7 +102,8 @@ const getUserById = async (req, res) => {
       },
     });
 
-    if (!user) return res.status(404).json({ message: "User tidak ditemukan" });
+    if (!user)
+      return res.status(404).json({ message: "User tidak ditemukan" });
 
     res.json(user);
   } catch (error) {
@@ -108,20 +112,29 @@ const getUserById = async (req, res) => {
 };
 
 /**
- * ✅ Get User Profile (Yang Login)
+ * ✅ Get User Profile (User yang sedang login)
  */
 const getUserProfile = async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id, {
-      attributes: ["id", "name", "email", "role", "point", "profile_picture"],
+      attributes: [
+        "id",
+        "name",
+        "email",
+        "role",
+        "point",
+        "profile_picture",
+        "created_at", // Gunakan nama field sesuai model
+      ],
       include: {
         model: Achievement,
         as: "achievements",
-        attributes: ["name", "description", "createdAt"],
+        attributes: ["name", "description"],
       },
     });
 
-    if (!user) return res.status(404).json({ message: "User tidak ditemukan" });
+    if (!user)
+      return res.status(404).json({ message: "User tidak ditemukan" });
 
     res.json(user);
   } catch (error) {
@@ -130,7 +143,7 @@ const getUserProfile = async (req, res) => {
 };
 
 /**
- * ✅ Update User (Bisa Update Foto Profil)
+ * ✅ Update User (Bisa update foto profil)
  */
 const updateUser = async (req, res) => {
   try {
@@ -138,16 +151,17 @@ const updateUser = async (req, res) => {
     console.log("Files:", req.files);
 
     const user = await User.findByPk(req.user.id);
-    if (!user) return res.status(404).json({ message: "User tidak ditemukan" });
+    if (!user)
+      return res.status(404).json({ message: "User tidak ditemukan" });
 
     const updateData = { ...req.body };
-    delete updateData.role; // Cegah update role
+    delete updateData.role; // Cegah update role oleh user
 
     if (updateData.password) {
       updateData.password = await bcrypt.hash(updateData.password, 10);
     }
 
-    // ✅ Cek apakah file dikirim
+    // Jika ada file profile_picture yang dikirim
     if (req.files && req.files["profile_picture"]) {
       updateData.profile_picture = `/image/${req.files["profile_picture"][0].filename}`;
     }
@@ -159,15 +173,14 @@ const updateUser = async (req, res) => {
   }
 };
 
-
-
 /**
- * ✅ Delete User (Hanya bisa hapus diri sendiri / Admin)
+ * ✅ Delete User (Hanya bisa hapus diri sendiri / oleh Admin)
  */
 const deleteUser = async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id);
-    if (!user) return res.status(404).json({ message: "User tidak ditemukan" });
+    if (!user)
+      return res.status(404).json({ message: "User tidak ditemukan" });
 
     await user.destroy();
     res.json({ message: "User berhasil dihapus" });
@@ -185,5 +198,3 @@ module.exports = {
   updateUser,
   deleteUser,
 };
-
-

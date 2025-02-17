@@ -27,11 +27,7 @@ Achievement.init(
       type: DataTypes.TEXT,
       allowNull: true,
     },
-    createdAt: {
-      type: DataTypes.DATE, // Mengganti TIMESTAMP dengan DATE
-      defaultValue: Sequelize.fn('NOW'), // Menggunakan Sequelize.fn untuk mendapatkan current timestamp
-      allowNull: false,
-    },
+    
   },
   {
     sequelize,

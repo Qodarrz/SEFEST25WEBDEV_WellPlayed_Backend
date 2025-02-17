@@ -15,6 +15,7 @@ router.get("/kalkulator/riwayat", EmissionController.getUserEmissions);
 router.delete("/kalkulator/:id", authorizeRole("admin"), EmissionController.deleteEmission);
 
 // 🔥 Mission Routes
-router.get("/missions", MissionController.getMissions);  // ✅ Pakai DELETE
+router.get("/missions", MissionController.getMissions);      // Ambil daftar misi
+router.post("/missions/take", MissionController.takeMission);  // Ambil misi (gunakan POST karena membuat record baru)
 
 module.exports = router;

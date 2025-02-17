@@ -6,7 +6,7 @@ const Comment = require("./Comment");
 const Emission = require("./Emisi"); 
 const Achievement = require("./Achievement"); 
 const Mission = require("./Mission");
-const UserMission = require("./userMission"); // ✅ Pastikan nama sesuai
+const UserMission = require("./UserMission"); // ✅ Pastikan nama sesuai
 
 // 🔗 Relasi User ke Community (Post)
 User.hasMany(Community, { foreignKey: "user_id", as: "posts" });
